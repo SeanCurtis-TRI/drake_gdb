@@ -1,6 +1,5 @@
 import gdb
 import re
-import sys
 
 class IdPrinter:
     TEMPLATE_RE = re.compile('^drake::geometry::Identifier<[\w+:]+::(\w+)Tag>$')
