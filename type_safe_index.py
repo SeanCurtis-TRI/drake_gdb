@@ -11,7 +11,7 @@ class TypeSafeIndexPrinter:
     def to_string(self):
         i_val = self.val['index_']
         if (self.for_clion):
-            return '%d' % (i_val)
+            return 'Index(%d)' % (i_val)
         else: 
             return 'drake::TypeSafeIndex<%sTag> (%d)' % (self.name, i_val)
 

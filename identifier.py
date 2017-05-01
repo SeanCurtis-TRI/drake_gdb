@@ -11,7 +11,7 @@ class IdPrinter:
     def to_string(self):
         i_val = self.val['value_']
         if (self.for_clion):
-            return '%d' % (i_val)
+            return 'Id(%d)' % (i_val)
         else: 
             return 'drake::geometry::Identifier<%sTag> (%d)' % (self.name, i_val)
 
