@@ -30,13 +30,16 @@ import gdb
 import re
 import itertools
 
-
 class EigenMatrixPrinter:
         "Print Eigen Matrix or Array of some kind"
 
-        def __init__(self, variety, val):
+        def __init__(self, variety, val, for_clion):
                 "Extract all the necessary information"
-                
+
+                self.for_clion = for_clion
+                if (for_clion):
+                        self.children = lambda: self._iterator(self.rows, self.cols, self.data, self.rowMajor)
+
                 # Save the variety (presumably "Matrix" or "Array") for later usage
                 self.variety = variety
                 
@@ -113,14 +116,13 @@ class EigenMatrixPrinter:
                                         self.currentCol = 0
                                         self.currentRow = self.currentRow + 1
                                 
-                        
-                        item = '%f'% self.dataPtr.dereference()
+                        item = self.dataPtr.dereference()
                         self.dataPtr = self.dataPtr + 1
                         if (self.cols == 1): #if it's a column vector
                                 return ('[%d]' % (row,), item)
                         elif (self.rows == 1): #if it's a row vector
                                 return ('[%d]' % (col,), item)
-                        return ('[%d?,%d?]' % (row, col), item)
+                        return ('[%d,%d]' % (row, col), item)
 
         def matString( self ):
                 mat = ''
@@ -153,17 +155,13 @@ class EigenMatrixPrinter:
         def get_prefix(self):
                 return 'Eigen::%s<%s, %d, %d, %s>' % (self.variety, self.innerType, self.rows, self.cols, self.get_major_label())
 
-#       def children(self):
-#               return self._iterator2(self.rows, self.cols, self.data, self.rowMajor)
-
-
         def to_string(self):
                 return self.get_prefix() + " (data ptr: %s)\n%s" % (self.data, self.matString())
 
 
 class EigenTransformPrinter(EigenMatrixPrinter):
-        def __init__(self, val):
-                EigenMatrixPrinter.__init__(self, "Transform", val["m_matrix"])
+        def __init__(self, val, for_clion):
+                EigenMatrixPrinter.__init__(self, "Transform", val["m_matrix"], for_clion)
 
                 # The gdb extension does not support value template arguments - need to extract them by hand
                 type = val.type
@@ -191,9 +189,10 @@ class EigenTransformPrinter(EigenMatrixPrinter):
 class EigenQuaternionPrinter:
         "Print an Eigen Quaternion"
         
-        def __init__(self, val):
+        def __init__(self, val, for_clion):
                 "Extract all the necessary information"
                 # The gdb extension does not support value template arguments - need to extract them by hand
+                self.for_clion = for_clion
                 type = val.type
                 if type.code == gdb.TYPE_CODE_REF:
                         type = type.target()
@@ -236,20 +235,16 @@ class EigenQuaternionPrinter:
         def to_string(self):
                 return "Eigen::Quaternion<%s> (data ptr: %s)" % (self.innerType, self.data)
 
-def build_eigen_dictionary ():
-        pretty_printers_dict[re.compile('^Eigen::Quaternion<.*>$')] = lambda val: EigenQuaternionPrinter(val)
-        pretty_printers_dict[re.compile('^Eigen::Transform<.*>$')] = lambda val: EigenTransformPrinter(val)
-        pretty_printers_dict[re.compile('^Eigen::Matrix<.*>$')] = lambda val: EigenMatrixPrinter("Matrix", val)
-        pretty_printers_dict[re.compile('^Eigen::Array<.*>$')]  = lambda val: EigenMatrixPrinter("Array",  val)
-
-def register_printers(obj):
+def register_printers(for_clion):
         "Register eigen pretty-printers with objfile Obj"
+        global pretty_printers_dict
+        pretty_printers_dict[re.compile('^Eigen::Quaternion<.*>$')] = lambda val: EigenQuaternionPrinter(val, for_clion)
+        pretty_printers_dict[re.compile('^Eigen::Transform<.*>$')] = lambda val: EigenTransformPrinter(val, for_clion)
+        pretty_printers_dict[re.compile('^Eigen::Matrix<.*>$')] = lambda val: EigenMatrixPrinter("Matrix", val, for_clion)
+        pretty_printers_dict[re.compile('^Eigen::Array<.*>$')]  = lambda val: EigenMatrixPrinter("Array",  val, for_clion)
+        gdb.pretty_printers.append(lambda val: lookup_function(val, for_clion))
 
-        if obj == None:
-                obj = gdb
-        obj.pretty_printers.append(lookup_function)
-
-def lookup_function(val):
+def lookup_function(val, for_clion):
         "Look-up and return a pretty-printer that can print va."
         type = val.type
         orig = type
@@ -258,19 +253,14 @@ def lookup_function(val):
                 type = type.target()
         
         type = type.unqualified().strip_typedefs()
-#        print ("origina", orig)
-#        print ("stripped", type)
         typename = type.tag
         if typename == None:
                 return None
         
         for function in pretty_printers_dict:
                 if function.search(typename):
-#                        print('Input %s, lead to %s' % (orig, type))
                         return pretty_printers_dict[function](val)
         
         return None
 
 pretty_printers_dict = {}
-
-build_eigen_dictionary ()

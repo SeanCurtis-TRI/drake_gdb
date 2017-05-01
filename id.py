@@ -4,26 +4,32 @@ import sys
 
 class IdPrinter:
     TEMPLATE_RE = re.compile('^drake::geometry::Identifier<[\w+:]+::(\w+)Tag>$')
-    def __init__(self, name, val):
-        #TODO: Use name when using command-line GDB but *not* in CLION
+    def __init__(self, name, val, for_clion):
         self.name = name
         self.val = val
+        self.for_clion = for_clion
     
     def to_string(self):
         i_val = self.val['value_']
-        return '%s: (%d)' % (self.name, i_val)
+        if (self.for_clion):
+            return '%d' % (i_val)
+        else: 
+            return 'drake::geometry::Identifier<%sTag> (%d)' % (self.name, i_val)
 
-def lookup_type(val):
+def lookup_type(val, for_clion):
     raw_type = val.type.unqualified().strip_typedefs()
 
     constructor = None
     match = IdPrinter.TEMPLATE_RE.match(str(raw_type))
     if (match):
-        name = '%s ID' % (match.group(1))
-        constructor = IdPrinter(name, val)
+        constructor = IdPrinter(match.group(1), val, for_clion)
 
     return constructor
 
-def register_printers():
-    gdb.pretty_printers.append(lookup_type)
+def register_printers(for_clion):
+    '''Registers id printers with gdb.
+
+    @param for_clion   If True, this is being invoked by a gdb instance in CLion.
+    '''
+    gdb.pretty_printers.append(lambda val: lookup_type(val, for_clion))
     
