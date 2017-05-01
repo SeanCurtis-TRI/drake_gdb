@@ -142,16 +142,51 @@ class EigenMatrixPrinter:
                                         rows[r].append(s)
                                         ptr += 1
                 # compute column widths independently
-                return '\n'.join(map(lambda row: ''.join(map(lambda c: '{0:{1}}'.format(row[c], widths[c] + 1), range(len(row)))), rows))
-                
+                return '\n'.join(map(lambda row: '\t' + ''.join(map(lambda c: '{0:{1}}'.format(row[c], widths[c] + 1), range(len(row)))), rows))
+
+        def get_major_label(self):
+                if self.rowMajor:
+                        return "RowMajor"
+                else:
+                        return "ColMajor"
+
+        def get_prefix(self):
+                return 'Eigen::%s<%s, %d, %d, %s>' % (self.variety, self.innerType, self.rows, self.cols, self.get_major_label())
+
 #       def children(self):
 #               return self._iterator2(self.rows, self.cols, self.data, self.rowMajor)
 
 
         def to_string(self):
-                return "Eigen::%s<%s,%d,%d,%s> (data ptr: %s)\n%s" % (self.variety, self.innerType, self.rows, self.cols, "RowMajor" if self.rowMajor else  "ColMajor", self.data, self.matString())
+                return self.get_prefix() + " (data ptr: %s)\n%s" % (self.data, self.matString())
 
 
+class EigenTransformPrinter(EigenMatrixPrinter):
+        def __init__(self, val):
+                EigenMatrixPrinter.__init__(self, "Transform", val["m_matrix"])
+
+                # The gdb extension does not support value template arguments - need to extract them by hand
+                type = val.type
+                if type.code == gdb.TYPE_CODE_REF:
+                        type = type.target()
+                type = type.unqualified().strip_typedefs()
+                tag = type.tag
+                regex = re.compile('\<.*\>')
+                m = regex.findall(tag)[0][1:-1]
+                template_params = m.split(',')
+                self.mode = int(template_params[2])
+
+        def get_mode_string(self):
+                if (self.mode == 0):
+                        return "Affine"
+                elif (self.mode == 1):
+                        return "AffineCompact"
+                else:
+                        return "Projective"
+
+        def get_prefix(self):
+                return 'Eigen::Transform<%s, %d, %s, %s>' % (self.variety, self.rows - 1, self.get_mode_string(), self.get_major_label())
+                
 
 class EigenQuaternionPrinter:
         "Print an Eigen Quaternion"
@@ -203,6 +238,7 @@ class EigenQuaternionPrinter:
 
 def build_eigen_dictionary ():
         pretty_printers_dict[re.compile('^Eigen::Quaternion<.*>$')] = lambda val: EigenQuaternionPrinter(val)
+        pretty_printers_dict[re.compile('^Eigen::Transform<.*>$')] = lambda val: EigenTransformPrinter(val)
         pretty_printers_dict[re.compile('^Eigen::Matrix<.*>$')] = lambda val: EigenMatrixPrinter("Matrix", val)
         pretty_printers_dict[re.compile('^Eigen::Array<.*>$')]  = lambda val: EigenMatrixPrinter("Array",  val)
 
@@ -222,7 +258,8 @@ def lookup_function(val):
                 type = type.target()
         
         type = type.unqualified().strip_typedefs()
-        
+#        print ("origina", orig)
+#        print ("stripped", type)
         typename = type.tag
         if typename == None:
                 return None
