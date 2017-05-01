@@ -7,9 +7,11 @@ FOR_CLION = sys.version_info[0] == 2
 
 import eigen_printers
 import id
+import type_safe_index
 
 def register_printers():
     global FOR_CLION
     eigen_printers.register_printers(FOR_CLION)
     id.register_printers(FOR_CLION)
+    type_safe_index.register_printers(FOR_CLION)
     
