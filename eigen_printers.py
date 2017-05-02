@@ -30,6 +30,47 @@ import gdb
 import re
 import itertools
 
+class EigenAutoDiffScalarPrinter:
+        def __init__(self, val, for_clion):
+                # TODO: extract enough arguments for the autodiff scalar that it's declaration is clear.
+                self.val = val
+                self.for_clion = for_clion
+                self.scalarValue = float(self.val['m_value'])
+
+        class _iterator:
+                VALUE = 0
+                DERIVS = 1
+                MAX_FIELDS = 2
+                def __init__(self, value, derivs):
+                        self.value = value
+                        self.derivs = derivs
+                        self.stage = self.VALUE
+
+                def __next__(self):
+                        result = None
+                        if (self.stage == self.MAX_FIELDS):
+                                raise StopIteration
+                        elif (self.stage == self.VALUE):
+                                result = ('value', self.value)
+                        elif (self.stage == self.DERIVS):                                
+                                result = ("derivatives", self.derivs)
+                        self.stage += 1
+                        return result
+
+                def next(self):
+                        return self.__next__()
+
+                def __iter__(self):
+                        return self
+
+        def children(self):
+                return self._iterator(self.scalarValue, self.val['m_derivatives'])
+
+        def to_string(self):
+                # TODO: Confirm that this is actually double -- although it's a safe assumption
+                # TODO: Report the *size* of the derivatives vector.
+                return "AutoDiffScalar<double>: {0:<14g}".format(self.scalarValue)
+
 class EigenMatrixPrinter:
         "Print Eigen Matrix or Array of some kind"
 
@@ -238,6 +279,7 @@ class EigenQuaternionPrinter:
 def register_printers(for_clion):
         "Register eigen pretty-printers with objfile Obj"
         global pretty_printers_dict
+        pretty_printers_dict[re.compile('^Eigen::AutoDiffScalar<.*>$')] = lambda val: EigenAutoDiffScalarPrinter(val, for_clion)
         pretty_printers_dict[re.compile('^Eigen::Quaternion<.*>$')] = lambda val: EigenQuaternionPrinter(val, for_clion)
         pretty_printers_dict[re.compile('^Eigen::Transform<.*>$')] = lambda val: EigenTransformPrinter(val, for_clion)
         pretty_printers_dict[re.compile('^Eigen::Matrix<.*>$')] = lambda val: EigenMatrixPrinter("Matrix", val, for_clion)
