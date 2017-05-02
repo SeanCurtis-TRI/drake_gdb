@@ -85,26 +85,17 @@ class EigenMatrixPrinter:
                 self.variety = variety
                 
                 # The gdb extension does not support value template arguments - need to extract them by hand
-                type = val.type
-                if type.code == gdb.TYPE_CODE_REF:
-                        type = type.target()
-                self.type = type.unqualified().strip_typedefs()
-                tag = self.type.tag
-                regex = re.compile('\<.*\>')
-                m = regex.findall(tag)[0][1:-1]
-                template_params = m.split(',')
-                template_params = [x.replace(" ", "") for x in template_params]
-                
+                template_params = self.get_template_parameters(val)
+ 
                 if template_params[1] == '-0x00000000000000001' or template_params[1] == '-0x000000001' or template_params[1] == '-1':
-                        self.rows = val['m_storage']['m_rows']
+                        self.rows = int(val['m_storage']['m_rows'])
                 else:
                         self.rows = int(template_params[1])
                 
                 if template_params[2] == '-0x00000000000000001' or template_params[2] == '-0x000000001' or template_params[2] == '-1':
-                        self.cols = val['m_storage']['m_cols']
+                        self.cols = int(val['m_storage']['m_cols'])
                 else:
                         self.cols = int(template_params[2])
-                
                 self.options = 0 # default value
                 if len(template_params) > 3:
                         self.options = template_params[3];
@@ -114,7 +105,7 @@ class EigenMatrixPrinter:
                 self.innerType = self.type.template_argument(0)
                 
                 self.val = val
-                
+
                 # Fixed size matrices have a struct as their storage, so we need to walk through this
                 self.data = self.val['m_storage']['m_data']
                 if self.data.type.code == gdb.TYPE_CODE_STRUCT:
@@ -165,22 +156,52 @@ class EigenMatrixPrinter:
                                 return ('[%d]' % (col,), item)
                         return ('[%d,%d]' % (row, col), item)
 
+        def get_template_parameters(self, val):
+                '''Handles the special case where the template parameters have nested template parameters.
+                e.g., Eigen::Matrix<Eigen::AutoDifScalar<...>, 4, 4, 0, 4, 4>'''
+                type = val.type
+                if type.code == gdb.TYPE_CODE_REF:
+                        type = type.target()
+                self.type = type.unqualified().strip_typedefs()
+                tag = self.type.tag
+                print (tag)
+                parm_list_re = re.compile('<.*\>')
+                parm_str = parm_list_re.findall(tag)[0][1:-1]
+                if ('<' in parm_str):
+                        # this *should* handle nested template types for the first parameter (the scalar value).
+                        param_re = re.compile('(?:[^<>]+<.*>\s*,)|(?:[^<>]+?(?:,|$))')
+                        template_params = []
+                        m = param_re.search(parm_str)
+                        while (m):
+                                template_params.append(parm_str[m.pos:m.end()].strip(','))
+                                m = param_re.search(parm_str, m.end())
+                        return template_params
+                else:
+                        template_params = m.split(',')
+                        return [x.replace(" ", "") for x in template_params]
+
         def matString( self ):
+                '''Produces a tab-indented, RXC printout of the matrix data.'''
                 mat = ''
                 ptr = self.data
-                rows = [ [], [], [], [] ]
-                widths = [0, 0, 0, 0]
+                getFloat = float
+                if (ptr.dereference().type.code != gdb.TYPE_CODE_FLT):
+                        # assume autodiff
+                        auto_diff_val = ptr.dereference()
+                        getFloat = lambda x: float(x['m_value'])
+                rows = [ [] for r in range(self.rows) ]
+                widths = [0 for r in range(self.rows) ]
                 if (self.rowMajor == 0 ):
-                        for c in range(4):
-                                for r in range(4):
-                                        s = '{:.14g}'.format(float(ptr.dereference()))
+                        for c in range(self.cols):
+                                for r in range(self.rows):
+                                        s = '{:.14g}'.format(getFloat(ptr.dereference()))
                                         widths[c] = max(widths[c], len(s))
                                         rows[r].append(s)
                                         ptr += 1
                 else:
-                        for r in range(4):
-                                for c in range(4):
-                                        s = '{:.14g}'.format(float(ptr.dereference()))
+                        for r in range(self.rows):
+                                for c in range(self.cols):
+                                        s = '{:.14g}'.format(getFloat(ptr.dereference()))
                                         widths[c] = max(widths[c], len(s))
                                         rows[r].append(s)
                                         ptr += 1
@@ -188,15 +209,18 @@ class EigenMatrixPrinter:
                 return '\n'.join(map(lambda row: '\t' + ''.join(map(lambda c: '{0:{1}}'.format(row[c], widths[c] + 1), range(len(row)))), rows))
 
         def get_major_label(self):
+                '''Maps the row major boolean to a string for display'''
                 if self.rowMajor:
                         return "RowMajor"
                 else:
                         return "ColMajor"
 
         def get_prefix(self):
+                '''Defines the display prefix -- can be overridden by derived classes'''
                 return 'Eigen::%s<%s, %d, %d, %s>' % (self.variety, self.innerType, self.rows, self.cols, self.get_major_label())
 
         def to_string(self):
+                '''Produces the string representation -- prefix, pointer, and matrix string representation.'''
                 return self.get_prefix() + " (data ptr: %s)\n%s" % (self.data, self.matString())
 
 
