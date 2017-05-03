@@ -165,18 +165,15 @@ class EigenMatrixPrinter:
                 tag = self.type.tag
                 parm_list_re = re.compile('<.*\>')
                 parm_str = parm_list_re.findall(tag)[0][1:-1]
-                if ('<' in parm_str):
-                        # this *should* handle nested template types for the first parameter (the scalar value).
-                        param_re = re.compile('(?:[^<>]+<.*>\s*,)|(?:[^<>]+?(?:,|$))')
-                        template_params = []
-                        m = param_re.search(parm_str)
-                        while (m):
-                                template_params.append(parm_str[m.pos:m.end()].strip(','))
-                                m = param_re.search(parm_str, m.end())
-                        return template_params
-                else:
-                        template_params = parm_str.split(',')
-                        return [x.replace(" ", "") for x in template_params]
+
+                # this *should* handle nested template types for the first parameter (the scalar value).
+                param_re = re.compile('(?:[^<>]+<.*>\s*,)|(?:[^<>]+?(?:,|$))')
+                template_params = []
+                m = param_re.search(parm_str)
+                while (m):
+                        template_params.append(parm_str[m.pos:m.end()].strip(','))
+                        m = param_re.search(parm_str, m.end())
+                return template_params
 
         def matString( self ):
                 '''Produces a tab-indented, RXC printout of the matrix data.'''
