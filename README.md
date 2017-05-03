@@ -15,7 +15,7 @@ This project provides a number of debugging utilities for working with drake.
 ## Install
 
 1. Install the repository to some path: $DRAKE_GDB_ROOT$.
-2. Create (if it doesn't already exist) the file `~/.gitinfo`
+2. Create (if it doesn't already exist) the file `~/.gdbinit`
 3. Insert the following lines:
 ```
 python
