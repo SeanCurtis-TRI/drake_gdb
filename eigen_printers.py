@@ -171,7 +171,7 @@ class EigenMatrixPrinter:
                 template_params = []
                 m = param_re.search(parm_str)
                 while (m):
-                        template_params.append(parm_str[m.pos:m.end()].strip(','))
+                        template_params.append(parm_str[m.pos:m.end()].strip(' ,'))
                         m = param_re.search(parm_str, m.end())
                 return template_params
 
