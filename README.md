@@ -150,7 +150,17 @@ Subsequent values need to be specifically queried as expressions, e.g., `vecx_d.
 
 **Figure 10:** Reading the values of Quaternion<double> with drake_gdb.
 
+### Autodiff
 
+The current support for Autodiff scalars is limited. In CLion, autodiff scalar values can be examined for
+value and derivative values (by expanding the displayed values.) The expansion tree has been improved
+over the default behavior such that the derivatives and values are *immediately* available. The current
+assumption is that the Autodiff *value* will be accessed more than the derivative values. As such, the
+derivatives are one click deeper than the value.
+
+In command-line `gdb`, the derivatvies are not displayed at all. But the values are displayed in the
+same format as when the scalar is a `double`. In other words, a 2D matrix of Autodiff scalars will
+display the same as the same matrix with `double` scalar values.
 
 ## Install
 
