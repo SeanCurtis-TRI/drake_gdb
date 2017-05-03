@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
 
   Vec3d vec_d;
   vec_d << 1.234, 5.678, 9.101112;
-  VecX vecx_d(3);
+  VecXd vecx_d(3);
   vecx_d << 10, 9, 8;
   Isometry3d xform_d = Isometry3d::Identity();
   xform_d.translation() << -1, -2.355, 7;
