@@ -85,12 +85,10 @@ class EigenMatrixPrinter:
                 
                 # The gdb extension does not support value template arguments - need to extract them by hand
                 template_params = self.get_template_parameters(val)
- 
                 if template_params[1] == '-0x00000000000000001' or template_params[1] == '-0x000000001' or template_params[1] == '-1':
                         self.rows = int(val['m_storage']['m_rows'])
                 else:
                         self.rows = int(template_params[1])
-                
                 if template_params[2] == '-0x00000000000000001' or template_params[2] == '-0x000000001' or template_params[2] == '-1':
                         self.cols = int(val['m_storage']['m_cols'])
                 else:
@@ -250,7 +248,6 @@ class EigenQuaternionPrinter:
         "Print an Eigen Quaternion"
         # The quaternion is four scalar values: this is the interpretation of the *order* of those values.
         elementNames = ['x', 'y', 'z', 'w']        
-        
         def __init__(self, val, for_clion):
                 "Extract all the necessary information"
                 # The gdb extension does not support value template arguments - need to extract them by hand
@@ -321,7 +318,7 @@ def register_printers(for_clion):
         gdb.pretty_printers.append(lambda val: lookup_function(val, for_clion))
 
 def lookup_function(val, for_clion):
-        "Look-up and return a pretty-printer that can print va."
+        "Look-up and return a pretty-printer that can print val."
         type = val.type
         orig = type
         
@@ -332,7 +329,7 @@ def lookup_function(val, for_clion):
         typename = type.tag
         if typename == None:
                 return None
-        
+
         for function in pretty_printers_dict:
                 if function.search(typename):
                         return pretty_printers_dict[function](val)
