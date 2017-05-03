@@ -14,13 +14,14 @@ This project provides a number of debugging utilities for working with drake.
 
 ## Install
 
-1. Install the repository to some path: $DRAKE_GDB_ROOT$.
+1. Install the repository to some path: $DRAKE_GDB_ROOT$ (such that this is the *full* 
+path and not relative to your home directory).
 2. Create (if it doesn't already exist) the file `~/.gdbinit`
 3. Insert the following lines:
 ```
 python
 import sys
-sys.path.insert(0, $DRAKE_GDB_ROOT$)
+sys.path.insert(0, "$DRAKE_GDB_ROOT$")
 import drake_gdb 
 drake_gdb.register_printers(None)
 end
