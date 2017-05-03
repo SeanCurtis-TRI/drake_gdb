@@ -248,11 +248,16 @@ class EigenTransformPrinter(EigenMatrixPrinter):
 
 class EigenQuaternionPrinter:
         "Print an Eigen Quaternion"
+        # The quaternion is four scalar values: this is the interpretation of the *order* of those values.
+        elementNames = ['x', 'y', 'z', 'w']        
         
         def __init__(self, val, for_clion):
                 "Extract all the necessary information"
                 # The gdb extension does not support value template arguments - need to extract them by hand
-                self.for_clion = for_clion
+                if (for_clion):
+                        self.children = lambda: self._iterator(self.data)
+
+                # I expect this will fail with AutoDiff
                 type = val.type
                 if type.code == gdb.TYPE_CODE_REF:
                         type = type.target()
@@ -268,7 +273,6 @@ class EigenQuaternionPrinter:
                 def __init__ (self, dataPtr):
                         self.dataPtr = dataPtr
                         self.currentElement = 0
-                        self.elementNames = ['x', 'y', 'z', 'w']
                         
                 def __iter__ (self):
                         return self
@@ -286,14 +290,25 @@ class EigenQuaternionPrinter:
                         
                         item = self.dataPtr.dereference()
                         self.dataPtr = self.dataPtr + 1
-                        return ('[%s]' % (self.elementNames[element],), item)
-                        
-        def children(self):
-                
-                return self._iterator(self.data)
-        
+                        return ('[%s]' % (EigenQuaternionPrinter.elementNames[element],), item)
+
+        def quat_string(self):
+                '''Produces a quaternion string of the form "value, <value, value, value>'''
+                to_float = float
+                ptr = self.data
+                if (ptr.dereference().type.code != gdb.TYPE_CODE_FLT):
+                        # assume autodiff
+                        to_float = lambda x: float(x['m_value'])
+                def getNextFloat(pointer):
+                        val = to_float(pointer.dereference())
+                        pointer += 1
+                        return val
+                values = [ getNextFloat(ptr) for x in range(4) ]
+                q_values = dict(zip(self.elementNames, values))
+                return '{w:.14g}, <{x:.14g}, {y:.14g}, {z:.14g}>'.format(**q_values)
+
         def to_string(self):
-                return "Eigen::Quaternion<%s> (data ptr: %s)" % (self.innerType, self.data)
+                return "Eigen::Quaternion<%s> (data ptr: %s)\n\t%s" % (self.innerType, self.data, self.quat_string())
 
 def register_printers(for_clion):
         "Register eigen pretty-printers with objfile Obj"
