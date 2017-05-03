@@ -23,7 +23,7 @@ python
 import sys
 sys.path.insert(0, "$DRAKE_GDB_ROOT$")
 import drake_gdb 
-drake_gdb.register_printers(None)
+drake_gdb.register_printers()
 end
 ```
 
