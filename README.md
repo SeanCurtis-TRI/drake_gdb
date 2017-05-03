@@ -12,6 +12,22 @@ This project provides a number of debugging utilities for working with drake.
 3. Provides extended functionality for Eigen types beyond eigen's released functionality.
 4. Handles `AutoDiff` types differently from `double` types.
 
+## Install
+
+1. Install the repository to some path: $DRAKE_GDB_ROOT$.
+2. Create (if it doesn't already exist) the file `~/.gitinfo`
+3. Insert the following lines:
+```
+python
+import sys
+sys.path.insert(0, $DRAKE_GDB_ROOT$)
+import drake_gdb 
+drake_gdb.register_printers(None)
+end
+```
+
+Simply launch gdb and the pretty printers will be instantiated.
+
 ## Examples
 
 Using the following small program:
@@ -161,20 +177,4 @@ derivatives are one click deeper than the value.
 In command-line `gdb`, the derivatvies are not displayed at all. But the values are displayed in the
 same format as when the scalar is a `double`. In other words, a 2D matrix of Autodiff scalars will
 display the same as the same matrix with `double` scalar values.
-
-## Install
-
-1. Install the repository to some path: $DRAKE_GDB_ROOT$.
-2. Create (if it doesn't already exist) the file `~/.gitinfo`
-3. Insert the following lines:
-```
-python
-import sys
-sys.path.insert(0, $DRAKE_GDB_ROOT$)
-import drake_gdb 
-drake_gdb.register_printers(None)
-end
-```
-
-Simply launch gdb and the pretty printers will be instantiated.
 
