@@ -76,7 +76,6 @@ class EigenMatrixPrinter:
 
         def __init__(self, variety, val, for_clion):
                 "Extract all the necessary information"
-
                 self.for_clion = for_clion
                 if (for_clion):
                         self.children = lambda: self._iterator(self.rows, self.cols, self.data, self.rowMajor)
@@ -164,7 +163,6 @@ class EigenMatrixPrinter:
                         type = type.target()
                 self.type = type.unqualified().strip_typedefs()
                 tag = self.type.tag
-                print (tag)
                 parm_list_re = re.compile('<.*\>')
                 parm_str = parm_list_re.findall(tag)[0][1:-1]
                 if ('<' in parm_str):
@@ -177,7 +175,7 @@ class EigenMatrixPrinter:
                                 m = param_re.search(parm_str, m.end())
                         return template_params
                 else:
-                        template_params = m.split(',')
+                        template_params = parm_str.split(',')
                         return [x.replace(" ", "") for x in template_params]
 
         def matString( self ):
