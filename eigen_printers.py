@@ -243,7 +243,7 @@ class EigenTransformPrinter(EigenMatrixPrinter):
                         return "Projective"
 
         def get_prefix(self):
-                return 'Eigen::Transform<%s, %d, %s, %s>' % (self.variety, self.rows - 1, self.get_mode_string(), self.get_major_label())
+                return 'Eigen::Transform<%s, %d, %s, %s>' % (self.innerType, self.rows - 1, self.get_mode_string(), self.get_major_label())
                 
 
 class EigenQuaternionPrinter:
