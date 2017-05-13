@@ -20,14 +20,19 @@ path and not relative to your home directory).
 3. Insert the following lines:
 ```
 python
-import sys
-sys.path.insert(0, "$DRAKE_GDB_ROOT$")
+import sys, os
+sys.path.insert(0, os.environ["DRAKE_GDB_ROOT"])
 import drake_gdb 
 drake_gdb.register_printers()
 end
 ```
 
-Simply launch gdb and the pretty printers will be instantiated.
+Simply launch gdb and the pretty printers will be instantiated. You should see
+the following output in the GDB terminal:
+```
+Registered GDB printers for Drake
+(gdb)
+```
 
 ## Examples
 
