@@ -14,7 +14,7 @@ This project provides a number of debugging utilities for working with drake.
 
 ## Install
 
-1. Install the repository to some path: $DRAKE_GDB_ROOT$ (such that this is the *full* 
+1. Install the repository to some path: `$DRAKE_GDB_ROOT$` (such that this is the *full* 
 path and not relative to your home directory).
 2. Create (if it doesn't already exist) the file `~/.gdbinit`
 3. Insert the following lines:
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
 printing the values of `vec_d`, `vecx_d`, `xform_d`, `mat_d`, and `q_d`, respectively, *without*
 `drake_gdb` looks like this in the command line:
 
-```
+```c++
 $1 = {<Eigen::PlainObjectBase<Eigen::Matrix<double, 3, 1, 0, 3, 1> >> = {<Eigen::MatrixBase<Eigen::Matrix<d
 ouble, 3, 1, 0, 3, 1> >> = {<Eigen::DenseBase<Eigen::Matrix<double, 3, 1, 0, 3, 1> >> = {<Eigen::DenseCoeff
 sBase<Eigen::Matrix<double, 3, 1, 0, 3, 1>, 3>> = {<Eigen::DenseCoeffsBase<Eigen::Matrix<double, 3, 1, 0, 3
@@ -108,7 +108,7 @@ ta fields>}}
 
 For the `VectorX` (indicated by `$2`), the vector values aren't displayed at all. *With* `drake_gdb`, it looks like this:
 
-```
+```c++
 $1 = Eigen::Matrix<double, 3, 1, ColMajor> (data ptr: 0x7fffffffdbb8)
 	1.234    
 	5.678    
