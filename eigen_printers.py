@@ -183,7 +183,7 @@ class EigenMatrixPrinter:
                         auto_diff_val = ptr.dereference()
                         getFloat = lambda x: float(x['m_value'])
                 rows = [ [] for r in range(self.rows) ]
-                widths = [0 for r in range(self.rows) ]
+                widths = [0 for c in range(self.cols) ]
                 if (self.rowMajor == 0 ):
                         for c in range(self.cols):
                                 for r in range(self.rows):
@@ -329,7 +329,6 @@ def lookup_function(val, for_clion):
         typename = type.tag
         if typename == None:
                 return None
-
         for function in pretty_printers_dict:
                 if function.search(typename):
                         return pretty_printers_dict[function](val)
