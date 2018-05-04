@@ -14,4 +14,5 @@ def register_printers():
     eigen_printers.register_printers(FOR_CLION)
     identifier.register_printers(FOR_CLION)
     type_safe_index.register_printers(FOR_CLION)
-    
+    print("Registered GDB printers for Drake")
+
